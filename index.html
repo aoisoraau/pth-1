@@ -3,149 +3,249 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>智能句子碰碰車 (v5.0)</title>
+    <title>時、人、地、事！！！</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&display=swap" rel="stylesheet">
+
     <style>
+        /* 1. 關鍵修正：確保寬度包含邊框和內距 */
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-color: #FFF3E0;
+            --card-shadow: 0 6px 0 rgba(0,0,0,0.15);
+            --blue: #42A5F5;
+            --yellow: #FFEE58;
+            --green: #66BB6A;
+            --orange: #FF7043;
+            --purple: #AB47BC;
+            --card-width: 135px;
+            --card-height: 230px;
+        }
+
         body {
-            font-family: "Microsoft JhengHei", sans-serif;
+            font-family: "M PLUS Rounded 1c", "Microsoft JhengHei", sans-serif;
             text-align: center;
-            background-color: #FAFAFA;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(#FFCCBC 15%, transparent 16%), radial-gradient(#FFCCBC 15%, transparent 16%);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
             margin: 0;
-            overflow-x: hidden; /* 防止滑出時出現卷軸 */
-        }
-        h1 { color: #333; margin: 10px 0; }
-
-        /* 遊戲主容器 */
-        .game-area {
-            display: flex;
-            align-items: center; /* 垂直置中 */
-            justify-content: center;
-            gap: 8px;
-            flex-wrap: wrap; /* 小螢幕自動換行 */
-            max-width: 100%;
+            /* 允許頁面本身出現捲軸，防止內容被強制切斷 */
+            overflow-x: auto; 
             padding: 10px;
         }
 
+        h1 { 
+            color: #5D4037; 
+            font-weight: 800; 
+            font-size: 2.5rem;
+            margin: 5px 0 15px 0;
+            text-shadow: 3px 3px 0px #FFF;
+        }
+
+        /* 遊戲主舞台 */
+        .game-board {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(5px);
+            
+            /* 2. 關鍵修正：加大左右內距，尤其是右邊，防止切邊 */
+            padding: 20px 40px; 
+            
+            border-radius: 30px;
+            border: 6px solid #FFF;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 10px; /*稍微加大間距*/
+            
+            flex-wrap: nowrap; 
+            /* 移除過於嚴格的 max-width，改用 fit-content 配合 min-width */
+            width: fit-content;
+            min-width: fit-content;
+            
+            transition: all 0.5s ease;
+        }
+
         .card {
-            width: 150px;
-            height: 240px;
-            border-radius: 12px;
+            width: var(--card-width);
+            height: var(--card-height);
+            border-radius: 16px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             background: white;
-            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+            box-shadow: var(--card-shadow);
             position: relative;
-            border: 2px solid transparent;
-            flex-shrink: 0; /* 防止卡片被壓扁 */
+            border: 3px solid white;
+            transition: transform 0.2s;
+            flex-shrink: 0;
         }
 
-        /* --- 基礎配色 --- */
-        .time   { border-top: 12px solid #4DA6FF; background: #EDF7FF; } 
-        .person { border-top: 12px solid #FFD633; background: #FFFDF0; }
-        .place  { border-top: 12px solid #66CC66; background: #F0FAF0; }
-        .action { border-top: 12px solid #FF944D; background: #FFF5EC; }
-        
-        /* --- 新增：賓語卡 (滑出來的卡) 紫色 --- */
-        .object { 
-            border-top: 12px solid #BA68C8; 
-            background: #F3E5F5; 
-            border-bottom: 2px solid #BA68C8;
+        @keyframes bounce {
+            0% { transform: scale(0.8); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
         }
+        .card.pop { animation: bounce 0.5s ease-out; }
 
-        /* --- 滑出動畫容器 --- */
-        .slide-container {
-            display: flex;
-            gap: 8px;
-            width: 0; /* 預設寬度為 0 (隱藏) */
-            opacity: 0;
-            overflow: hidden; /* 內容超出隱藏 */
-            transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1); /* 彈性滑出效果 */
-        }
-        
-        .slide-container.show {
-            width: 320px; /* 足夠容納兩張卡的寬度 */
-            opacity: 1;
-        }
+        .time   { background: #E3F2FD; border-color: var(--blue); color: #1565C0; } 
+        .person { background: #FFFDE7; border-color: #FBC02D; color: #F57F17; }
+        .place  { background: #E8F5E9; border-color: var(--green); color: #2E7D32; }
+        .action { background: #FFEBEE; border-color: var(--orange); color: #C62828; }
+        .object { background: #F3E5F5; border-color: var(--purple); color: #6A1B9A; }
 
-        .emoji-display { font-size: 55px; margin: 5px 0; line-height: 1.1; }
-        .text-display { font-size: 22px; font-weight: bold; color: #333; margin-bottom: 2px; padding: 0 5px; word-wrap: break-word;}
-        .pinyin-display { font-size: 13px; color: #666; font-style: italic; margin-bottom: 10px;}
+        .emoji-display { 
+            font-size: 55px; 
+            margin: 8px 0; 
+            filter: drop-shadow(2px 2px 0px rgba(0,0,0,0.1));
+        }
         
-        /* 標籤 */
-        .label { position: absolute; top: 5px; left: 5px; font-size: 10px; color: #999; font-weight: bold; }
+        .text-display { 
+            font-size: 22px; 
+            font-weight: 800; 
+            margin-bottom: 4px; 
+            padding: 0 2px; 
+            word-wrap: break-word;
+            line-height: 1.2;
+        }
+        
+        .pinyin-display { 
+            font-size: 13px; 
+            font-weight: 500;
+            opacity: 0.7;
+            font-family: "Verdana", sans-serif;
+        }
+        
+        .label { 
+            position: absolute; 
+            top: 6px; 
+            left: 0; 
+            width: 100%;
+            text-align: center;
+            font-size: 11px; 
+            opacity: 0.6; 
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
 
         button {
-            margin-top: 20px;
-            padding: 12px 40px;
+            margin-top: 25px;
+            padding: 12px 50px;
             font-size: 24px;
-            background-color: #333;
+            font-family: "M PLUS Rounded 1c", sans-serif;
+            font-weight: 800;
             color: white;
+            background: linear-gradient(to bottom, #FFAB91, #FF5722);
             border: none;
             border-radius: 50px;
             cursor: pointer;
-            box-shadow: 0 5px 0 #000;
+            box-shadow: 0 6px 0 #D84315, 0 15px 20px rgba(0,0,0,0.2);
             transition: all 0.1s;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
         }
-        button:active { transform: translateY(5px); box-shadow: none; }
+        button:active { transform: translateY(6px); box-shadow: 0 0 0 #D84315; }
         
         .full-sentence-box {
-            margin-top: 20px;
+            margin-top: 25px;
             background: white;
-            padding: 15px 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            border-left: 8px solid #333;
-            max-width: 90%;
-            min-width: 300px;
+            padding: 15px 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border: 4px solid #FFCCBC;
+            max-width: 95%;
+            position: relative;
         }
-        .full-sentence { font-size: 26px; color: #333; font-weight: bold; line-height: 1.4; }
+        .full-sentence-box::before {
+            content: "";
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            margin-left: -10px;
+            border-width: 10px;
+            border-style: solid;
+            border-color: transparent transparent #FFCCBC transparent;
+        }
+
+        .full-sentence { 
+            font-size: 28px; 
+            color: #3E2723; 
+            font-weight: 800; 
+            line-height: 1.4; 
+        }
+
+        /* 滑出動畫容器 */
+        .slide-container {
+            display: flex;
+            gap: 10px; /* 與主容器一致 */
+            width: 0;
+            opacity: 0;
+            overflow: hidden;
+            /* 增加一點 padding 防止內部的陰影被切掉 */
+            padding-right: 5px; 
+            padding-bottom: 10px; /* 預留下方陰影空間 */
+            margin-bottom: -10px; /* 抵消 padding 造成的版面位移 */
+            transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+        }
+
+        /* RWD */
+        @media (max-width: 768px) {
+            h1 { font-size: 1.8rem; }
+            /* 手機上允許縮小以適應 */
+            .game-board { transform: scale(0.8); transform-origin: top center; margin-left: -10%; width: 120%; }
+        }
+
     </style>
 </head>
 <body>
 
-    <h1>🔮 句子碰碰車 (及物動詞版)</h1>
+    <h1>🌈 句子魔法機</h1>
 
-    <div class="game-area">
-        <div class="card time">
-            <span class="label">時間</span>
+    <div class="game-board">
+        <div class="card time" id="c1">
+            <span class="label">時間 Time</span>
             <div class="emoji-display" id="e1">📅</div>
             <div class="text-display" id="t1">今天</div>
             <div class="pinyin-display" id="p1">gam1 tin1</div>
         </div>
-        <div class="card person">
-            <span class="label">人物</span>
+        <div class="card person" id="c2">
+            <span class="label">人物 Who</span>
             <div class="emoji-display" id="e2">🙂</div>
             <div class="text-display" id="t2">我</div>
             <div class="pinyin-display" id="p2">ngo5</div>
         </div>
-        <div class="card place">
-            <span class="label">地點</span>
+        <div class="card place" id="c3">
+            <span class="label">地點 Where</span>
             <div class="emoji-display" id="e3">🏫</div>
             <div class="text-display" id="t3">在學校</div>
             <div class="pinyin-display" id="p3">zoi6 hok6 haau6</div>
         </div>
-        <div class="card action">
-            <span class="label">事情</span>
+        <div class="card action" id="c4">
+            <span class="label">事情 Action</span>
             <div class="emoji-display" id="e4">🏃</div>
             <div class="text-display" id="t4">跑步</div>
             <div class="pinyin-display" id="p4">paau2 bou6</div>
         </div>
 
         <div class="slide-container" id="extraSlots">
-            <div class="card object">
-                <span class="label">對象/事物</span>
+            <div class="card object" id="c5">
                 <div class="emoji-display" id="e5">❓</div>
                 <div class="text-display" id="t5">...</div>
                 <div class="pinyin-display" id="p5">...</div>
             </div>
             <div class="card object" id="card6" style="display:none;">
-                <span class="label">動作</span>
                 <div class="emoji-display" id="e6">📢</div>
                 <div class="text-display" id="t6">叫</div>
                 <div class="pinyin-display" id="p6">giu3</div>
@@ -153,14 +253,13 @@
         </div>
     </div>
 
-    <button onclick="spin()">🎲 隨機造句</button>
+    <button onclick="spin()">🎲 變身 (GO!)</button>
 
     <div class="full-sentence-box">
-        <div class="full-sentence" id="result">準備開始...</div>
+        <div class="full-sentence" id="result">按一下按鈕開始！</div>
     </div>
 
     <script>
-        // --- 資料庫 ---
         const data = {
             time: [
                 {t:"今天", e:"📅", p:"gam1 tin1"}, {t:"昨天", e:"🔙", p:"zok3 tin1"},
@@ -180,98 +279,105 @@
                 {t:"公園", e:"🌳", p:"gung1 jyun2"}, {t:"超市", e:"🛒", p:"ciu1 si5"},
                 {t:"圖書館", e:"📚", p:"tou4 syu1 gun2"}, {t:"商場", e:"🛍️", p:"soeng1 coeng4"}
             ],
-            // 注意：這裡包含了特殊的及物動詞
             action: [
                 {t:"跑步", e:"🏃", p:"paau2 bou6"}, 
                 {t:"睡覺", e:"😴", p:"seoi6 gaau3"},
-                {t:"看見", e:"👀", p:"hon3 gin3"}, // 觸發人物
-                {t:"聽見", e:"👂", p:"teng1 gin3"}, // 觸發人物 + 叫
-                {t:"打掃", e:"🧹", p:"daa2 sou3"},  // 觸發地點
-                {t:"照顧", e:"🤗", p:"ziu3 gu3"},  // 觸發人物
-                {t:"學習", e:"📝", p:"hok6 zaap6"}, // 觸發事物
+                {t:"看見", e:"👀", p:"hon3 gin3"}, 
+                {t:"聽見", e:"👂", p:"teng1 gin3"}, 
+                {t:"打掃", e:"🧹", p:"daa2 sou3"},
+                {t:"照顧", e:"🤗", p:"ziu3 gu3"},
+                {t:"學習", e:"📝", p:"hok6 zaap6"},
                 {t:"吃飯", e:"🍚", p:"hek3 faan6"}
             ]
         };
 
         function spin() {
-            // 1. 先重置：把滑出的卡收回去
+            animateCards();
+
             const extraContainer = document.getElementById('extraSlots');
             const card6 = document.getElementById('card6');
-            extraContainer.classList.remove('show');
-            card6.style.display = 'none'; // 預設隱藏第6張
+            
+            extraContainer.style.width = '0px';
+            extraContainer.style.opacity = '0';
+            card6.style.display = 'none'; 
 
-            // 2. 隨機抽取基礎 4 張
             const t = getRandom(data.time);
             const p = getRandom(data.person);
             const pl = getRandom(data.place);
             const a = getRandom(data.action);
 
-            // 3. 更新基礎卡片 UI
             updateCard('e1', 't1', 'p1', t);
             updateCard('e2', 't2', 'p2', p);
             
-            // 地點特殊處理：加上「在」
             document.getElementById('e3').innerText = pl.e;
             document.getElementById('t3').innerText = "在" + pl.t;
             document.getElementById('p3').innerText = "zoi6 " + pl.p;
 
             updateCard('e4', 't4', 'p4', a);
 
-            // 4. 構建句子與處理「特殊動詞」邏輯
             let fullSentence = `${t.t}，${p.t}在${pl.t}${a.t}`;
-            let delayShow = 100; // 延遲顯示滑出效果 (毫秒)
+            let extraObj = null;
+            let widthToExpand = '0px';
+            let hasExtra = false;
 
-            // 判斷動詞 (a.t)
-            if (["看見", "照顧", "聽見", "打掃", "學習"].includes(a.t)) {
+            if (["看見", "照顧", "聽見", "學習"].includes(a.t)) {
+                hasExtra = true;
                 
-                setTimeout(() => {
-                    extraContainer.classList.add('show');
-                }, delayShow);
-
-                let extraObj = null;
-
                 if (a.t === "看見" || a.t === "照顧") {
-                    // 滑出：人物
                     extraObj = getRandom(data.person);
-                    updateCard('e5', 't5', 'p5', extraObj);
                     fullSentence += extraObj.t;
+                    // 3. 關鍵修正：寬度改為 150px (原135)，給予緩衝
+                    widthToExpand = '150px';
 
                 } else if (a.t === "聽見") {
-                    // 滑出：人物 + 叫
                     extraObj = getRandom(data.person);
-                    updateCard('e5', 't5', 'p5', extraObj);
-                    
-                    // 顯示第6張卡 (叫)
-                    card6.style.display = 'flex';
-                    // 卡6是固定的，不需要隨機
-                    
                     fullSentence += (extraObj.t + "叫");
-
-                } else if (a.t === "打掃") {
-                    // 滑出：地點 (不能是家裏)
-                    // 過濾掉 "家裏"
-                    const validPlaces = data.place.filter(item => item.t !== "家裏");
-                    extraObj = getRandom(validPlaces);
+                    // 3. 關鍵修正：寬度改為 300px (原278)，給予緩衝
+                    widthToExpand = '300px';
                     
-                    updateCard('e5', 't5', 'p5', extraObj);
-                    fullSentence += extraObj.t;
+                    document.getElementById('e6').innerText = "📢";
+                    document.getElementById('t6').innerText = "叫";
 
                 } else if (a.t === "學習") {
-                    // 滑出：學習的對象 (你未指定，我這裡預設為「中文」)
                     extraObj = {t:"中文", e:"🀄", p:"zung1 man4"};
-                    updateCard('e5', 't5', 'p5', extraObj);
                     fullSentence += extraObj.t;
+                    widthToExpand = '150px';
                 }
 
-            } else {
-                // 如果是一般動詞 (如跑步、睡覺)，保持滑出區隱藏
+                if (extraObj) {
+                    updateCard('e5', 't5', 'p5', extraObj);
+                }
             }
 
             fullSentence += "。";
-
-            // 5. 顯示句子與朗讀
             document.getElementById('result').innerText = fullSentence;
             speak(fullSentence);
+
+            if (hasExtra) {
+                setTimeout(() => {
+                    if (a.t === "聽見") {
+                        card6.style.display = 'flex';
+                    }
+                    
+                    extraContainer.style.width = widthToExpand;
+                    extraContainer.style.opacity = '1';
+
+                    document.getElementById('c5').classList.remove('pop');
+                    void document.getElementById('c5').offsetWidth;
+                    document.getElementById('c5').classList.add('pop');
+
+                }, 250);
+            }
+        }
+
+        function animateCards() {
+            const ids = ['c1', 'c2', 'c3', 'c4'];
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                el.classList.remove('pop');
+                void el.offsetWidth;
+                el.classList.add('pop');
+            });
         }
 
         function getRandom(arr) {
