@@ -3,271 +3,275 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>句子碰碰車 (客製詞彙版)</title>
+    <title>智能句子碰碰車 (v5.0)</title>
     <style>
         body {
             font-family: "Microsoft JhengHei", sans-serif;
             text-align: center;
-            background-color: #F5F5F5;
+            background-color: #FAFAFA;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
             margin: 0;
-            padding: 20px;
+            overflow-x: hidden; /* 防止滑出時出現卷軸 */
         }
-        h1 { color: #333; margin-bottom: 10px; }
-        p { color: #666; margin-bottom: 20px; }
+        h1 { color: #333; margin: 10px 0; }
 
-        .game-container {
+        /* 遊戲主容器 */
+        .game-area {
             display: flex;
-            gap: 12px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
+            align-items: center; /* 垂直置中 */
             justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap; /* 小螢幕自動換行 */
+            max-width: 100%;
+            padding: 10px;
         }
-        
+
         .card {
-            width: 165px;
-            height: 260px;
-            border-radius: 15px;
+            width: 150px;
+            height: 240px;
+            border-radius: 12px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             background: white;
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-            transition: transform 0.2s;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
             position: relative;
-            border: 2px solid transparent; /* 預留邊框位置 */
+            border: 2px solid transparent;
+            flex-shrink: 0; /* 防止卡片被壓扁 */
+        }
+
+        /* --- 基礎配色 --- */
+        .time   { border-top: 12px solid #4DA6FF; background: #EDF7FF; } 
+        .person { border-top: 12px solid #FFD633; background: #FFFDF0; }
+        .place  { border-top: 12px solid #66CC66; background: #F0FAF0; }
+        .action { border-top: 12px solid #FF944D; background: #FFF5EC; }
+        
+        /* --- 新增：賓語卡 (滑出來的卡) 紫色 --- */
+        .object { 
+            border-top: 12px solid #BA68C8; 
+            background: #F3E5F5; 
+            border-bottom: 2px solid #BA68C8;
+        }
+
+        /* --- 滑出動畫容器 --- */
+        .slide-container {
+            display: flex;
+            gap: 8px;
+            width: 0; /* 預設寬度為 0 (隱藏) */
+            opacity: 0;
+            overflow: hidden; /* 內容超出隱藏 */
+            transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1); /* 彈性滑出效果 */
         }
         
-        /* --- 根據圖片更新的配色 --- */
+        .slide-container.show {
+            width: 320px; /* 足夠容納兩張卡的寬度 */
+            opacity: 1;
+        }
+
+        .emoji-display { font-size: 55px; margin: 5px 0; line-height: 1.1; }
+        .text-display { font-size: 22px; font-weight: bold; color: #333; margin-bottom: 2px; padding: 0 5px; word-wrap: break-word;}
+        .pinyin-display { font-size: 13px; color: #666; font-style: italic; margin-bottom: 10px;}
         
-        /* 時間 (Time) #4DA6FF (藍) */
-        .time { 
-            border-top: 15px solid #4DA6FF; 
-            border-bottom: 2px solid #4DA6FF;
-            background: #EDF7FF; 
-        } 
+        /* 標籤 */
+        .label { position: absolute; top: 5px; left: 5px; font-size: 10px; color: #999; font-weight: bold; }
 
-        /* 人物 (Person) #FFD633 (黃) */
-        .person { 
-            border-top: 15px solid #FFD633; 
-            border-bottom: 2px solid #FFD633;
-            background: #FFFDF0; 
-        }
-
-        /* 地點 (Place) #66CC66 (綠) */
-        .place { 
-            border-top: 15px solid #66CC66; 
-            border-bottom: 2px solid #66CC66;
-            background: #F0FAF0; 
-        }
-
-        /* 事情 (Action) #FF944D (橙) */
-        .action { 
-            border-top: 15px solid #FF944D; 
-            border-bottom: 2px solid #FF944D;
-            background: #FFF5EC; 
-        }
-
-        .category-label {
-            font-size: 14px;
-            color: #888;
-            margin-top: 8px;
-            font-weight: bold;
-        }
-
-        .emoji-display {
-            font-size: 60px;
-            margin: 5px 0;
-            line-height: 1.1;
-        }
-
-        .text-display {
-            font-size: 24px; /* 字體稍微調小以容納長詞 */
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 2px;
-            padding: 0 5px;
-            word-wrap: break-word;
-        }
-
-        .pinyin-display {
-            font-size: 14px;
-            color: #666;
-            font-family: Arial, sans-serif;
-            margin-bottom: 15px;
-            font-style: italic;
-        }
-        
         button {
-            padding: 15px 50px;
-            font-size: 28px;
+            margin-top: 20px;
+            padding: 12px 40px;
+            font-size: 24px;
             background-color: #333;
             color: white;
             border: none;
             border-radius: 50px;
             cursor: pointer;
-            box-shadow: 0 6px 0 #000;
-            font-weight: bold;
+            box-shadow: 0 5px 0 #000;
             transition: all 0.1s;
         }
-        button:active { transform: translateY(6px); box-shadow: none; }
+        button:active { transform: translateY(5px); box-shadow: none; }
         
         .full-sentence-box {
-            margin-top: 25px;
+            margin-top: 20px;
             background: white;
-            padding: 20px 30px;
-            border-radius: 15px;
+            padding: 15px 25px;
+            border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            border-left: 10px solid #333;
-            max-width: 800px;
+            border-left: 8px solid #333;
+            max-width: 90%;
+            min-width: 300px;
         }
-        .full-sentence {
-            font-size: 28px;
-            color: #333;
-            font-weight: bold;
-            line-height: 1.4;
-        }
+        .full-sentence { font-size: 26px; color: #333; font-weight: bold; line-height: 1.4; }
     </style>
 </head>
 <body>
 
-    <h1>🌈 句子碰碰車 (圖片詞彙版)</h1>
-    <p>點擊按鈕，隨機組句！</p>
+    <h1>🔮 句子碰碰車 (及物動詞版)</h1>
 
-    <div class="game-container">
+    <div class="game-area">
         <div class="card time">
-            <div class="category-label">時間 (Time)</div>
+            <span class="label">時間</span>
             <div class="emoji-display" id="e1">📅</div>
             <div class="text-display" id="t1">今天</div>
             <div class="pinyin-display" id="p1">gam1 tin1</div>
         </div>
         <div class="card person">
-            <div class="category-label">人物 (Person)</div>
+            <span class="label">人物</span>
             <div class="emoji-display" id="e2">🙂</div>
             <div class="text-display" id="t2">我</div>
             <div class="pinyin-display" id="p2">ngo5</div>
         </div>
         <div class="card place">
-            <div class="category-label">地點 (Place)</div>
+            <span class="label">地點</span>
             <div class="emoji-display" id="e3">🏫</div>
             <div class="text-display" id="t3">在學校</div>
             <div class="pinyin-display" id="p3">zoi6 hok6 haau6</div>
         </div>
         <div class="card action">
-            <div class="category-label">事情 (Action)</div>
+            <span class="label">事情</span>
             <div class="emoji-display" id="e4">🏃</div>
             <div class="text-display" id="t4">跑步</div>
             <div class="pinyin-display" id="p4">paau2 bou6</div>
+        </div>
+
+        <div class="slide-container" id="extraSlots">
+            <div class="card object">
+                <span class="label">對象/事物</span>
+                <div class="emoji-display" id="e5">❓</div>
+                <div class="text-display" id="t5">...</div>
+                <div class="pinyin-display" id="p5">...</div>
+            </div>
+            <div class="card object" id="card6" style="display:none;">
+                <span class="label">動作</span>
+                <div class="emoji-display" id="e6">📢</div>
+                <div class="text-display" id="t6">叫</div>
+                <div class="pinyin-display" id="p6">giu3</div>
+            </div>
         </div>
     </div>
 
     <button onclick="spin()">🎲 隨機造句</button>
 
     <div class="full-sentence-box">
-        <div class="full-sentence" id="result">...準備開始...</div>
+        <div class="full-sentence" id="result">準備開始...</div>
     </div>
 
     <script>
-        // 根據圖片輸入的完整詞彙庫
+        // --- 資料庫 ---
         const data = {
-            // 時間 (Time) - 藍色 #4DA6FF
             time: [
                 {t:"今天", e:"📅", p:"gam1 tin1"}, {t:"昨天", e:"🔙", p:"zok3 tin1"},
                 {t:"明天", e:"🔜", p:"ming4 tin1"}, {t:"早上", e:"🌅", p:"zou2 soeng6"},
-                {t:"中午", e:"☀️", p:"zung1 ng5"}, {t:"下午", e:"🌇", p:"haa6 ng5"},
-                {t:"晚上", e:"🌙", p:"maan5 soeng6"}, {t:"放學後", e:"🎒", p:"fong3 hok6 hau6"},
-                {t:"週末", e:"🎡", p:"zau1 mut6"}, {t:"星期一", e:"1️⃣", p:"sing1 kei4 jat1"},
-                {t:"星期天", e:"7️⃣", p:"sing1 kei4 tin1"}, {t:"剛才", e:"⏱️", p:"gong1 coi4"},
-                {t:"現在", e:"👇", p:"jin6 zoi6"}, {t:"以前", e:"⏮️", p:"ji5 cin4"},
-                {t:"每天", e:"🔁", p:"mui5 tin1"}, {t:"不久", e:"⏳", p:"bat1 gau2"},
-                {t:"有時", e:"🤷", p:"jau5 si4"}, {t:"一直", e:"➡️", p:"jat1 zik6"},
-                {t:"春天", e:"🌸", p:"ceon1 tin1"}, {t:"夏天", e:"🏖️", p:"haa6 tin1"},
-                {t:"秋天", e:"🍂", p:"cau1 tin1"}, {t:"冬天", e:"⛄", p:"dung1 tin1"},
-                {t:"剛剛", e:"🕒", p:"gong1 gong1"}, {t:"忽然", e:"😲", p:"fat1 jin4"},
-                {t:"然後", e:"👉", p:"jin4 hau6"}
+                {t:"中午", e:"☀️", p:"zung1 ng5"}, {t:"晚上", e:"🌙", p:"maan5 soeng6"},
+                {t:"週末", e:"🎡", p:"zau1 mut6"}, {t:"現在", e:"👇", p:"jin6 zoi6"}
             ],
-            // 人物 (Person) - 黃色 #FFD633
             person: [
                 {t:"我", e:"🙋‍♂️", p:"ngo5"}, {t:"你", e:"👉", p:"nei5"},
-                {t:"他", e:"👨", p:"taa1"}, {t:"她", e:"👩", p:"taa1"},
-                {t:"我們", e:"👫", p:"ngo5 mun4"}, {t:"同學", e:"🎒", p:"tung4 hok6"},
-                {t:"老師", e:"👩‍🏫", p:"lou5 si1"}, {t:"朋友", e:"🤝", p:"pang4 jau5"},
-                {t:"媽媽", e:"👩", p:"maa1 maa1"}, {t:"爸爸", e:"👨", p:"baa4 baa1"},
-                {t:"哥哥", e:"👦", p:"go4 go1"}, {t:"姐姐", e:"👧", p:"ze2 ze2"},
-                {t:"弟弟", e:"👶", p:"dai4 dai2"}, {t:"妹妹", e:"👱‍♀️", p:"mui4 mui2"},
-                {t:"小朋友", e:"🎈", p:"siu2 pang4 jau5"}, {t:"爺爺", e:"👴", p:"je4 je4"},
-                {t:"奶奶", e:"👵", p:"naai4 naai2"}, {t:"叔叔", e:"🤵", p:"suk1 suk1"},
-                {t:"阿姨", e:"👩‍💼", p:"aa3 ji1"}, {t:"大家", e:"👥", p:"daai6 gaa1"},
-                {t:"貓", e:"🐱", p:"maau1"}, {t:"小狗", e:"🐶", p:"siu2 gau2"},
-                {t:"小鳥", e:"🐦", p:"siu2 niu5"}, {t:"小魚", e:"🐟", p:"siu2 jyu2"},
-                {t:"猴子", e:"🐒", p:"hau4 zi2"}
+                {t:"爸爸", e:"👨", p:"baa4 baa1"}, {t:"媽媽", e:"👩", p:"maa1 maa1"},
+                {t:"老師", e:"👩‍🏫", p:"lou5 si1"}, {t:"同學", e:"🎒", p:"tung4 hok6"},
+                {t:"小狗", e:"🐶", p:"siu2 gau2"}, {t:"貓", e:"🐱", p:"maau1"},
+                {t:"弟弟", e:"👶", p:"dai4 dai2"}, {t:"妹妹", e:"👱‍♀️", p:"mui4 mui2"}
             ],
-            // 地點 (Place) - 綠色 #66CC66 
-            // 注意：程式會自動加上「在」(zoi6)
             place: [
-                {t:"學校", e:"🏫", p:"hok6 haau6"}, {t:"教室", e:"🖍️", p:"gaau3 sat1"},
-                {t:"操場", e:"🏃", p:"cou1 coeng4"}, {t:"圖書館", e:"📚", p:"tou4 syu1 gun2"},
-                {t:"飯廳", e:"🥣", p:"faan6 teng1"}, {t:"廚房", e:"🍳", p:"cyu4 fong2"},
-                {t:"公園", e:"🌳", p:"gung1 jyun2"}, {t:"家裡", e:"🏠", p:"gaa1 leoi5"},
-                {t:"超市", e:"🛒", p:"ciu1 si5"}, {t:"餐廳", e:"🍔", p:"caan1 teng1"},
-                {t:"醫院", e:"🏥", p:"ji1 jyun2"}, {t:"巴士站", e:"🚏", p:"baa1 si2 zaam6"},
-                {t:"地鐵站", e:"🚇", p:"dei6 tit3 zaam6"}, {t:"商場", e:"🛍️", p:"soeng1 coeng4"},
-                {t:"樓下", e:"⬇️", p:"lau4 haa6"}, {t:"門口", e:"🚪", p:"mun4 hau2"},
-                {t:"客廳", e:"🛋️", p:"haak3 teng1"}, {t:"房間", e:"🛏️", p:"fong4 gaan1"},
-                {t:"廁所", e:"🚽", p:"ci3 so2"}, {t:"校園", e:"🏫", p:"haau6 jyun4"},
-                {t:"便利店", e:"🏪", p:"bin6 lei6 dim3"}, {t:"書店", e:"📖", p:"syu1 dim3"},
-                {t:"博物館", e:"🏛️", p:"bok3 mat6 gun2"}, {t:"海邊", e:"🏖️", p:"hoi2 bin1"},
-                {t:"山上", e:"⛰️", p:"saan1 soeng6"}
+                {t:"學校", e:"🏫", p:"hok6 haau6"}, {t:"家裏", e:"🏠", p:"gaa1 leoi5"},
+                {t:"公園", e:"🌳", p:"gung1 jyun2"}, {t:"超市", e:"🛒", p:"ciu1 si5"},
+                {t:"圖書館", e:"📚", p:"tou4 syu1 gun2"}, {t:"商場", e:"🛍️", p:"soeng1 coeng4"}
             ],
-            // 事情 (Action) - 橙色 #FF944D
+            // 注意：這裡包含了特殊的及物動詞
             action: [
-                {t:"跑步", e:"🏃", p:"paau2 bou6"}, {t:"走路", e:"🚶", p:"zau2 lou6"},
-                {t:"飛", e:"🕊️", p:"fei1"}, {t:"跳", e:"🦘", p:"tiu3"},
-                {t:"叫", e:"🗣️", p:"giu3"}, {t:"吃飯", e:"🍚", p:"hek3 faan6"},
-                {t:"喝水", e:"🥤", p:"hot3 seoi2"}, {t:"睡覺", e:"😴", p:"seoi6 gaau3"},
-                {t:"玩耍", e:"🤹", p:"waan4 saa2"}, {t:"看見", e:"👀", p:"hon3 gin3"},
-                {t:"聽見", e:"👂", p:"teng1 gin3"}, {t:"說話", e:"💬", p:"syut3 waa6"},
-                {t:"笑", e:"😄", p:"siu3"}, {t:"哭", e:"😭", p:"huk1"},
-                {t:"畫畫", e:"🎨", p:"waak6 waa2"}, {t:"寫字", e:"✍️", p:"se2 zi6"},
-                {t:"讀書", e:"📖", p:"duk6 syu1"}, {t:"學習", e:"📝", p:"hok6 zaap6"},
-                {t:"上學", e:"🎒", p:"soeng5 hok6"}, {t:"下課", e:"🔔", p:"haa6 fo3"},
-                {t:"洗手", e:"🧼", p:"sai2 sau2"}, {t:"幫忙", e:"🤝", p:"bong1 mong4"},
-                {t:"打掃", e:"🧹", p:"daa2 sou3"}, {t:"拿東西", e:"📦", p:"naa4 dung1 sai1"},
-                {t:"照顧", e:"🤗", p:"ziu3 gu3"}
+                {t:"跑步", e:"🏃", p:"paau2 bou6"}, 
+                {t:"睡覺", e:"😴", p:"seoi6 gaau3"},
+                {t:"看見", e:"👀", p:"hon3 gin3"}, // 觸發人物
+                {t:"聽見", e:"👂", p:"teng1 gin3"}, // 觸發人物 + 叫
+                {t:"打掃", e:"🧹", p:"daa2 sou3"},  // 觸發地點
+                {t:"照顧", e:"🤗", p:"ziu3 gu3"},  // 觸發人物
+                {t:"學習", e:"📝", p:"hok6 zaap6"}, // 觸發事物
+                {t:"吃飯", e:"🍚", p:"hek3 faan6"}
             ]
         };
 
         function spin() {
-            // 隨機抽取
+            // 1. 先重置：把滑出的卡收回去
+            const extraContainer = document.getElementById('extraSlots');
+            const card6 = document.getElementById('card6');
+            extraContainer.classList.remove('show');
+            card6.style.display = 'none'; // 預設隱藏第6張
+
+            // 2. 隨機抽取基礎 4 張
             const t = getRandom(data.time);
             const p = getRandom(data.person);
             const pl = getRandom(data.place);
             const a = getRandom(data.action);
 
-            // 更新畫面 (Emoji + 文字 + 拼音)
-            // 注意：這裡對地點 (Place) 做了特殊處理，增加了「在」 (zoi6)
+            // 3. 更新基礎卡片 UI
             updateCard('e1', 't1', 'p1', t);
             updateCard('e2', 't2', 'p2', p);
             
-            // 地點特殊處理：顯示 "在 + 地點"
+            // 地點特殊處理：加上「在」
             document.getElementById('e3').innerText = pl.e;
             document.getElementById('t3').innerText = "在" + pl.t;
             document.getElementById('p3').innerText = "zoi6 " + pl.p;
 
             updateCard('e4', 't4', 'p4', a);
 
-            // 組合句子
-            // 結構：時間 + 人物 + 在地點 + 事情
-            const sentence = `${t.t}，${p.t}在${pl.t}${a.t}。`;
-            document.getElementById('result').innerText = sentence;
+            // 4. 構建句子與處理「特殊動詞」邏輯
+            let fullSentence = `${t.t}，${p.t}在${pl.t}${a.t}`;
+            let delayShow = 100; // 延遲顯示滑出效果 (毫秒)
 
-            // 語音朗讀
-            speak(sentence);
+            // 判斷動詞 (a.t)
+            if (["看見", "照顧", "聽見", "打掃", "學習"].includes(a.t)) {
+                
+                setTimeout(() => {
+                    extraContainer.classList.add('show');
+                }, delayShow);
+
+                let extraObj = null;
+
+                if (a.t === "看見" || a.t === "照顧") {
+                    // 滑出：人物
+                    extraObj = getRandom(data.person);
+                    updateCard('e5', 't5', 'p5', extraObj);
+                    fullSentence += extraObj.t;
+
+                } else if (a.t === "聽見") {
+                    // 滑出：人物 + 叫
+                    extraObj = getRandom(data.person);
+                    updateCard('e5', 't5', 'p5', extraObj);
+                    
+                    // 顯示第6張卡 (叫)
+                    card6.style.display = 'flex';
+                    // 卡6是固定的，不需要隨機
+                    
+                    fullSentence += (extraObj.t + "叫");
+
+                } else if (a.t === "打掃") {
+                    // 滑出：地點 (不能是家裏)
+                    // 過濾掉 "家裏"
+                    const validPlaces = data.place.filter(item => item.t !== "家裏");
+                    extraObj = getRandom(validPlaces);
+                    
+                    updateCard('e5', 't5', 'p5', extraObj);
+                    fullSentence += extraObj.t;
+
+                } else if (a.t === "學習") {
+                    // 滑出：學習的對象 (你未指定，我這裡預設為「中文」)
+                    extraObj = {t:"中文", e:"🀄", p:"zung1 man4"};
+                    updateCard('e5', 't5', 'p5', extraObj);
+                    fullSentence += extraObj.t;
+                }
+
+            } else {
+                // 如果是一般動詞 (如跑步、睡覺)，保持滑出區隱藏
+            }
+
+            fullSentence += "。";
+
+            // 5. 顯示句子與朗讀
+            document.getElementById('result').innerText = fullSentence;
+            speak(fullSentence);
         }
 
         function getRandom(arr) {
@@ -284,7 +288,7 @@
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'zh-HK'; // 粵語發音
+                utterance.lang = 'zh-HK';
                 utterance.rate = 0.8;
                 window.speechSynthesis.speak(utterance);
             }
