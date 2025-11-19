@@ -9,11 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&display=swap" rel="stylesheet">
 
     <style>
-        /* 1. 關鍵修正：確保寬度包含邊框和內距 */
-        * {
-            box-sizing: border-box;
-        }
-
+        * { box-sizing: border-box; }
         :root {
             --bg-color: #FFF3E0;
             --card-shadow: 0 6px 0 rgba(0,0,0,0.15);
@@ -39,7 +35,6 @@
             justify-content: center;
             min-height: 100vh;
             margin: 0;
-            /* 允許頁面本身出現捲軸，防止內容被強制切斷 */
             overflow-x: auto; 
             padding: 10px;
         }
@@ -56,24 +51,17 @@
         .game-board {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(5px);
-            
-            /* 2. 關鍵修正：加大左右內距，尤其是右邊，防止切邊 */
             padding: 20px 40px; 
-            
             border-radius: 30px;
             border: 6px solid #FFF;
             box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            
             display: inline-flex;
             align-items: center;
             justify-content: flex-start;
-            gap: 10px; /*稍微加大間距*/
-            
+            gap: 10px;
             flex-wrap: nowrap; 
-            /* 移除過於嚴格的 max-width，改用 fit-content 配合 min-width */
             width: fit-content;
             min-width: fit-content;
-            
             transition: all 0.5s ease;
         }
 
@@ -189,24 +177,21 @@
         /* 滑出動畫容器 */
         .slide-container {
             display: flex;
-            gap: 10px; /* 與主容器一致 */
+            gap: 10px; 
             width: 0;
             opacity: 0;
             overflow: hidden;
-            /* 增加一點 padding 防止內部的陰影被切掉 */
             padding-right: 5px; 
-            padding-bottom: 10px; /* 預留下方陰影空間 */
-            margin-bottom: -10px; /* 抵消 padding 造成的版面位移 */
+            padding-bottom: 10px; 
+            margin-bottom: -10px; 
             transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
         }
 
         /* RWD */
         @media (max-width: 768px) {
             h1 { font-size: 1.8rem; }
-            /* 手機上允許縮小以適應 */
             .game-board { transform: scale(0.8); transform-origin: top center; margin-left: -10%; width: 120%; }
         }
-
     </style>
 </head>
 <body>
@@ -302,7 +287,7 @@
             card6.style.display = 'none'; 
 
             const t = getRandom(data.time);
-            const p = getRandom(data.person);
+            const p = getRandom(data.person); // 1. 這裡選出了主角 (Subject)
             const pl = getRandom(data.place);
             const a = getRandom(data.action);
 
@@ -324,15 +309,19 @@
                 hasExtra = true;
                 
                 if (a.t === "看見" || a.t === "照顧") {
-                    extraObj = getRandom(data.person);
+                    // 2. 關鍵修正：篩選出「不是主角」的人
+                    const validPeople = data.person.filter(item => item.t !== p.t);
+                    extraObj = getRandom(validPeople);
+                    
                     fullSentence += extraObj.t;
-                    // 3. 關鍵修正：寬度改為 150px (原135)，給予緩衝
                     widthToExpand = '150px';
 
                 } else if (a.t === "聽見") {
-                    extraObj = getRandom(data.person);
+                    // 2. 關鍵修正：篩選出「不是主角」的人
+                    const validPeople = data.person.filter(item => item.t !== p.t);
+                    extraObj = getRandom(validPeople);
+
                     fullSentence += (extraObj.t + "叫");
-                    // 3. 關鍵修正：寬度改為 300px (原278)，給予緩衝
                     widthToExpand = '300px';
                     
                     document.getElementById('e6').innerText = "📢";
